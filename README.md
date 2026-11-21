@@ -1,5 +1,7 @@
 # web-data-extractor
 
+[![ci](https://github.com/chasebuilds/web-data-extractor/actions/workflows/ci.yml/badge.svg)](https://github.com/chasebuilds/web-data-extractor/actions/workflows/ci.yml) ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue) [![MIT license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 Turns a public catalog-style website into a checked spreadsheet, driven by one small config file, and only when the site's robots.txt allows it. Every row carries the page it came from and when it was fetched.
 
 ![Raw catalog HTML on the left, the cleaned product rows and the rejected rows with reasons on the right](docs/preview.png)
