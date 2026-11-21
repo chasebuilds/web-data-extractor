@@ -2,6 +2,8 @@
 
 Turns a public catalog-style website into a checked spreadsheet, driven by one small config file, and only when the site's robots.txt allows it. Every row carries the page it came from and when it was fetched.
 
+![Raw catalog HTML on the left, the cleaned product rows and the rejected rows with reasons on the right](docs/preview.png)
+
 ## Measured result
 
 From [BENCHMARK.md](BENCHMARK.md), written by `benchmark/run_benchmark.py` from a real run against the bundled test site (72 listings on 6 pages, generated from a seeded truth file, with 9 broken items and 3 repeat listings planted in it):
