@@ -54,7 +54,7 @@ def _csv_safe(value: Any) -> Any:
 
 
 def _tables(result: RunResult) -> dict[str, tuple[list[str], list[list[Any]]]]:
-    def rows(dicts: list[dict], columns: list[str]) -> list[list[Any]]:
+    def rows(dicts: list[dict[str, Any]], columns: list[str]) -> list[list[Any]]:
         return [[d.get(c) for c in columns] for d in dicts]
 
     return {
@@ -74,7 +74,8 @@ def _write_csv(path: Path, columns: list[str], rows: list[list[Any]]) -> None:
 
 def _write_xlsx(path: Path, tables: dict[str, tuple[list[str], list[list[Any]]]]) -> None:
     workbook = Workbook()
-    workbook.remove(workbook.active)
+    if workbook.active is not None:
+        workbook.remove(workbook.active)
     for title, (columns, rows) in tables.items():
         sheet = workbook.create_sheet(title)
         sheet.append(columns)

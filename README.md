@@ -81,7 +81,10 @@ wde run configs/books_toscrape.yaml --out out/books
 python benchmark/run_benchmark.py            # rebuild the test site, score it, rewrite BENCHMARK.md
 wde demo --out out/fixture/data.jsonl        # also write Records as JSON Lines
 wde demo --out out/fixture/data.parquet      # or as Parquet (pip install -e ".[parquet]")
+pip install -e ".[dev]"                      # test and check tools: pytest, coverage, ruff, mypy
 pytest                                       # 191 tests, all offline
+pytest --cov                                 # the same, with branch coverage per module
+mypy                                         # strict type check of src/
 ```
 
 ## How it works

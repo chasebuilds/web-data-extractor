@@ -102,7 +102,7 @@ class Config:
         )
 
 
-def _take(section: dict, allowed: set[str], where: str) -> dict:
+def _take(section: dict[str, Any], allowed: set[str], where: str) -> dict[str, Any]:
     if not isinstance(section, dict):
         raise ConfigError(f"{where} must be a mapping.")
     unknown = sorted(set(section) - allowed)
@@ -169,7 +169,7 @@ def _fields(raw: Any, where: str) -> list[FieldSpec]:
     return [_field(str(name), spec, where) for name, spec in raw.items()]
 
 
-def _positive_int(section: dict, key: str, default: int, where: str) -> int:
+def _positive_int(section: dict[str, Any], key: str, default: int, where: str) -> int:
     value = section.get(key, default)
     if not isinstance(value, int) or isinstance(value, bool) or value < 1:
         raise ConfigError(f"{where}.{key} must be a whole number of at least 1.")

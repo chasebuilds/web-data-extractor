@@ -10,7 +10,7 @@ from urllib.parse import urldefrag, urljoin
 
 from . import __version__
 from .afetch import AsyncPoliteFetcher
-from .config import Config, ConfigError
+from .config import Config, ConfigError, FieldSpec
 from .extract import extract_fields, parse_html
 from .fetch import (
     USER_AGENT,
@@ -77,13 +77,13 @@ def _fetch_problem(result: FetchResult) -> str:
     return f"returned HTTP {result.status}"
 
 
-def _key(row: _Row, names: list[str]) -> tuple | None:
+def _key(row: _Row, names: list[str]) -> tuple[Any, ...] | None:
     key = tuple(row.values.get(n) for n in names)
     return None if any(part is None for part in key) else key
 
 
 def _mark_duplicates(rows: list[_Row], names: list[str]) -> int:
-    first_seen: dict[tuple, _Row] = {}
+    first_seen: dict[tuple[Any, ...], _Row] = {}
     count = 0
     for row in rows:
         if row.reasons:
@@ -102,7 +102,7 @@ def _mark_duplicates(rows: list[_Row], names: list[str]) -> int:
     return count
 
 
-def _required_failures(row: _Row, specs: list) -> list[str]:
+def _required_failures(row: _Row, specs: list[FieldSpec]) -> list[str]:
     return [
         f"{s.name}: {row.problems[s.name]}" for s in specs if s.required and s.name in row.problems
     ]

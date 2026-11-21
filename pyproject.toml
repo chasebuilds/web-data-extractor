@@ -19,7 +19,14 @@ dependencies = [
 
 [project.optional-dependencies]
 parquet = ["pyarrow>=15"]
-dev = ["pytest>=8", "ruff>=0.6"]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=5",
+    "ruff>=0.6",
+    "mypy>=1.10",
+    "types-PyYAML",
+    "types-openpyxl",
+]
 
 [project.scripts]
 wde = "web_data_extractor.cli:main"
@@ -30,6 +37,24 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.mypy]
+files = ["src"]
+python_version = "3.11"
+strict = true
+
+[[tool.mypy.overrides]]
+# pyarrow ships no type information; it is an optional extra used in one function.
+module = ["pyarrow", "pyarrow.*"]
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["web_data_extractor"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
 
 [tool.ruff]
 line-length = 100

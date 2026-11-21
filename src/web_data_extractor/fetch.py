@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from email.utils import parsedate_to_datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict, cast
 from urllib.parse import urldefrag, urljoin, urlsplit
 
 import httpx
@@ -157,6 +157,14 @@ def iso(moment: datetime) -> str:
     return moment.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+class CacheEntry(TypedDict):
+    url: str
+    final_url: str
+    status: int
+    fetched_at: str
+    text: str
+
+
 class _DiskCache:
     def __init__(self, directory: Path, ttl_hours: float, now: Callable[[], datetime]):
         self._dir = directory
@@ -167,12 +175,12 @@ class _DiskCache:
         digest = hashlib.sha256(url.encode("utf-8")).hexdigest()
         return self._dir / digest[:2] / f"{digest}.json"
 
-    def get(self, url: str, max_age: timedelta | None = None) -> dict | None:
+    def get(self, url: str, max_age: timedelta | None = None) -> CacheEntry | None:
         path = self._path(url)
         if not path.exists():
             return None
         try:
-            entry = json.loads(path.read_text(encoding="utf-8"))
+            entry = cast(CacheEntry, json.loads(path.read_text(encoding="utf-8")))
             fetched = datetime.strptime(entry["fetched_at"], "%Y-%m-%dT%H:%M:%SZ").replace(
                 tzinfo=UTC
             )
@@ -187,7 +195,7 @@ class _DiskCache:
     def put(self, url: str, *, final_url: str, status: int, text: str, fetched_at: str) -> None:
         path = self._path(url)
         path.parent.mkdir(parents=True, exist_ok=True)
-        entry = {
+        entry: CacheEntry = {
             "url": url,
             "final_url": final_url,
             "status": status,
