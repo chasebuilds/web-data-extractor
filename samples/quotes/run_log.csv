@@ -1,0 +1,4 @@
+﻿seq,url,kind,status,cache_hit,robots,attempt,waited_seconds,fetched_at,note
+1,https://quotes.toscrape.com/robots.txt,robots,404,True,robots.txt,0,0.0,2026-11-21T05:01:23Z,
+2,https://quotes.toscrape.com/page/1/,page,200,True,allowed,0,0.0,2026-11-21T05:01:23Z,
+3,https://quotes.toscrape.com/page/2/,page,200,True,allowed,0,0.0,2026-11-21T05:01:23Z,

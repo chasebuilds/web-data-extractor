@@ -1,0 +1,72 @@
+# Job for the fixture site bundled in this repo (fixture_site/).
+# `wde demo` serves that folder locally and fills in base_url for you.
+name: fixture-catalog
+
+vars:
+  base_url: http://127.0.0.1:8731
+
+start_urls:
+  - ${base_url}/catalog/page-1.html
+
+politeness:
+  min_delay_seconds: 0.5   # the floor; lower values are rejected
+
+cache:
+  enabled: false           # the demo should hit the local server every time
+
+limits:
+  max_pages: 10
+  max_detail_pages: 100
+  max_requests: 200
+
+list:
+  item_selector: "article.product"
+  fields:
+    sku:
+      attr: data-sku        # no selector: read the item element itself
+      required: true
+    name:
+      selector: ".name a"
+      required: true
+    category: ".category"
+    price:
+      selector: ".price"
+      type: number
+      min: 0.01
+      required: true
+    rating:
+      selector: ".rating"
+      regex: '(\d+(?:\.\d+)?)'
+      type: integer
+      min: 1
+      max: 5
+      required: true
+    link:
+      selector: ".name a"
+      attr: href
+      type: url
+
+pagination:
+  next_selector: "li.next a"
+
+detail:
+  url_field: link
+  fields:
+    brand: "dd.brand"
+    stock:
+      selector: ".stock"
+      regex: '(\d+)'
+      type: integer
+      min: 0
+      required: true
+
+unique_by: [sku]
+
+# The run exits non-zero if the result looks wrong, for example after a layout change.
+health:
+  min_records: 40
+  max_rejected_share: 0.3
+  min_fill_rate:
+    name: 0.9
+    price: 0.9
+    stock: 0.8

@@ -1,0 +1,603 @@
+{
+  "seed": 42,
+  "list_pages": 6,
+  "listings": 72,
+  "records": [
+    {
+      "sku": "SKU-1001",
+      "name": "Adjustable Aluminum Label Printer",
+      "price": 238.35,
+      "rating": 3,
+      "category": "Furniture",
+      "brand": "Bluewater",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1002",
+      "name": "Adjustable Aluminum Paper Cutter",
+      "price": 41.22,
+      "rating": 1,
+      "category": "Furniture",
+      "brand": "Quarry Lane",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1003",
+      "name": "Adjustable Cork Label Printer",
+      "price": 409.98,
+      "rating": 2,
+      "category": "Furniture",
+      "brand": "Alder & Pine",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1004",
+      "name": "Adjustable Walnut Laptop Riser",
+      "price": 52.78,
+      "rating": 1,
+      "category": "Print & Label",
+      "brand": "Northfield",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1005",
+      "name": "Anti-Slip Aluminum Cable Organizer",
+      "price": 12.06,
+      "rating": 4,
+      "category": "Lighting",
+      "brand": "Alder & Pine",
+      "stock": 25
+    },
+    {
+      "sku": "SKU-1007",
+      "name": "Anti-Slip Steel Bookend Set",
+      "price": 30.48,
+      "rating": 1,
+      "category": "Print & Label",
+      "brand": "Quarry Lane",
+      "stock": 103
+    },
+    {
+      "sku": "SKU-1009",
+      "name": "Clear Felt Paper Cutter",
+      "price": 51.45,
+      "rating": 2,
+      "category": "Furniture",
+      "brand": "Northfield",
+      "stock": 293
+    },
+    {
+      "sku": "SKU-1010",
+      "name": "Clear Steel Laptop Riser",
+      "price": 1199.66,
+      "rating": 5,
+      "category": "Print & Label",
+      "brand": "Tallgrass",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1011",
+      "name": "Clear Steel Paper Cutter",
+      "price": 638.1,
+      "rating": 4,
+      "category": "Storage",
+      "brand": "Quarry Lane",
+      "stock": 20
+    },
+    {
+      "sku": "SKU-1012",
+      "name": "Clear Walnut Cable Organizer",
+      "price": 55.92,
+      "rating": 4,
+      "category": "Print & Label",
+      "brand": "Tallgrass",
+      "stock": 116
+    },
+    {
+      "sku": "SKU-1014",
+      "name": "Compact Steel File Box",
+      "price": 50.44,
+      "rating": 5,
+      "category": "Desk Accessories",
+      "brand": "Quarry Lane",
+      "stock": 7
+    },
+    {
+      "sku": "SKU-1015",
+      "name": "Compact Walnut Drawer Unit",
+      "price": 9.14,
+      "rating": 3,
+      "category": "Desk Accessories",
+      "brand": "Tallgrass",
+      "stock": 14
+    },
+    {
+      "sku": "SKU-1016",
+      "name": "Compact Walnut File Box",
+      "price": 1227.0,
+      "rating": 5,
+      "category": "Furniture",
+      "brand": "Kestrel Works",
+      "stock": 135
+    },
+    {
+      "sku": "SKU-1018",
+      "name": "Heavy-Duty Cork Pen & Pencil Tray",
+      "price": 27.91,
+      "rating": 1,
+      "category": "Lighting",
+      "brand": "Quarry Lane",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1019",
+      "name": "Heavy-Duty Felt Letter Sorter",
+      "price": 50.49,
+      "rating": 4,
+      "category": "Storage",
+      "brand": "Northfield",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1020",
+      "name": "Heavy-Duty Felt Storage Bin",
+      "price": 54.19,
+      "rating": 1,
+      "category": "Desk Accessories",
+      "brand": "Tallgrass",
+      "stock": 676
+    },
+    {
+      "sku": "SKU-1021",
+      "name": "Heavy-Duty Steel Laptop Riser",
+      "price": 11.39,
+      "rating": 2,
+      "category": "Furniture",
+      "brand": "Northfield",
+      "stock": 12
+    },
+    {
+      "sku": "SKU-1022",
+      "name": "Heavy-Duty Steel Paper Cutter",
+      "price": 47.49,
+      "rating": 3,
+      "category": "Storage",
+      "brand": "Quarry Lane",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1023",
+      "name": "Heavy-Duty Steel Pen & Pencil Tray",
+      "price": 469.28,
+      "rating": 3,
+      "category": "Desk Accessories",
+      "brand": "Alder & Pine",
+      "stock": 65
+    },
+    {
+      "sku": "SKU-1024",
+      "name": "Heavy-Duty Walnut Pen & Pencil Tray",
+      "price": 13.6,
+      "rating": 3,
+      "category": "Desk Accessories",
+      "brand": "Quarry Lane",
+      "stock": 450
+    },
+    {
+      "sku": "SKU-1025",
+      "name": "Heavy-Duty Walnut Whiteboard",
+      "price": 58.92,
+      "rating": 1,
+      "category": "Desk Accessories",
+      "brand": "Alder & Pine",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1026",
+      "name": "Low-Profile Aluminum Paper Cutter",
+      "price": 859.6,
+      "rating": 4,
+      "category": "Print & Label",
+      "brand": "Tallgrass",
+      "stock": 435
+    },
+    {
+      "sku": "SKU-1029",
+      "name": "Low-Profile Glass Clip & Pin Holder",
+      "price": 1287.08,
+      "rating": 4,
+      "category": "Desk Accessories",
+      "brand": "Tallgrass",
+      "stock": 9
+    },
+    {
+      "sku": "SKU-1030",
+      "name": "Low-Profile Walnut Desk Lamp",
+      "price": 40.73,
+      "rating": 5,
+      "category": "Print & Label",
+      "brand": "Kestrel Works",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1031",
+      "name": "Low-Profile Walnut File Box",
+      "price": 446.74,
+      "rating": 4,
+      "category": "Furniture",
+      "brand": "Bluewater",
+      "stock": 14
+    },
+    {
+      "sku": "SKU-1032",
+      "name": "Magnetic Aluminum Desk Lamp",
+      "price": 48.14,
+      "rating": 1,
+      "category": "Desk Accessories",
+      "brand": "Tallgrass",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1033",
+      "name": "Magnetic Glass Label Printer",
+      "price": 1442.09,
+      "rating": 2,
+      "category": "Storage",
+      "brand": "Alder & Pine",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1034",
+      "name": "Magnetic Glass Whiteboard",
+      "price": 59.08,
+      "rating": 4,
+      "category": "Furniture",
+      "brand": "Quarry Lane",
+      "stock": 240
+    },
+    {
+      "sku": "SKU-1035",
+      "name": "Magnetic Steel Paper Cutter",
+      "price": 42.54,
+      "rating": 2,
+      "category": "Lighting",
+      "brand": "Northfield",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1036",
+      "name": "Modular Bamboo Desk Lamp",
+      "price": 1340.48,
+      "rating": 1,
+      "category": "Print & Label",
+      "brand": "Alder & Pine",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1037",
+      "name": "Modular Bamboo Letter Sorter",
+      "price": 1288.34,
+      "rating": 4,
+      "category": "Print & Label",
+      "brand": "Quarry Lane",
+      "stock": 477
+    },
+    {
+      "sku": "SKU-1038",
+      "name": "Modular Canvas Bookend Set",
+      "price": 352.85,
+      "rating": 4,
+      "category": "Desk Accessories",
+      "brand": "Alder & Pine",
+      "stock": 825
+    },
+    {
+      "sku": "SKU-1039",
+      "name": "Modular Canvas Cable Organizer",
+      "price": 500.21,
+      "rating": 1,
+      "category": "Desk Accessories",
+      "brand": "Alder & Pine",
+      "stock": 18
+    },
+    {
+      "sku": "SKU-1041",
+      "name": "Modular Canvas Wall Shelf",
+      "price": 809.98,
+      "rating": 4,
+      "category": "Lighting",
+      "brand": "Alder & Pine",
+      "stock": 439
+    },
+    {
+      "sku": "SKU-1042",
+      "name": "Modular Felt File Box",
+      "price": 95.94,
+      "rating": 4,
+      "category": "Lighting",
+      "brand": "Kestrel Works",
+      "stock": 20
+    },
+    {
+      "sku": "SKU-1044",
+      "name": "Modular Glass Bookend Set",
+      "price": 953.58,
+      "rating": 3,
+      "category": "Furniture",
+      "brand": "Quarry Lane",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1045",
+      "name": "Quiet Cork Laptop Riser",
+      "price": 1042.79,
+      "rating": 5,
+      "category": "Print & Label",
+      "brand": "Quarry Lane",
+      "stock": 126
+    },
+    {
+      "sku": "SKU-1046",
+      "name": "Quiet Felt Bookend Set",
+      "price": 27.15,
+      "rating": 1,
+      "category": "Desk Accessories",
+      "brand": "Bluewater",
+      "stock": 21
+    },
+    {
+      "sku": "SKU-1047",
+      "name": "Quiet Felt Letter Sorter",
+      "price": 1460.66,
+      "rating": 3,
+      "category": "Furniture",
+      "brand": "Kestrel Works",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1048",
+      "name": "Quiet Felt Paper Cutter",
+      "price": 155.84,
+      "rating": 2,
+      "category": "Lighting",
+      "brand": "Quarry Lane",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1049",
+      "name": "Recycled Canvas Whiteboard",
+      "price": 57.1,
+      "rating": 5,
+      "category": "Storage",
+      "brand": "Alder & Pine",
+      "stock": 525
+    },
+    {
+      "sku": "SKU-1050",
+      "name": "Recycled Felt File Box",
+      "price": 1803.87,
+      "rating": 3,
+      "category": "Desk Accessories",
+      "brand": "Alder & Pine",
+      "stock": 662
+    },
+    {
+      "sku": "SKU-1051",
+      "name": "Recycled Felt Task Chair Mat",
+      "price": 43.81,
+      "rating": 3,
+      "category": "Lighting",
+      "brand": "Tallgrass",
+      "stock": 360
+    },
+    {
+      "sku": "SKU-1052",
+      "name": "Recycled Glass Task Chair Mat",
+      "price": 1823.04,
+      "rating": 2,
+      "category": "Lighting",
+      "brand": "Tallgrass",
+      "stock": 145
+    },
+    {
+      "sku": "SKU-1053",
+      "name": "Slim Aluminum Letter Sorter",
+      "price": 46.92,
+      "rating": 5,
+      "category": "Lighting",
+      "brand": "Kestrel Works",
+      "stock": 479
+    },
+    {
+      "sku": "SKU-1054",
+      "name": "Slim Canvas Desk Lamp",
+      "price": 990.97,
+      "rating": 1,
+      "category": "Furniture",
+      "brand": "Bluewater",
+      "stock": 7
+    },
+    {
+      "sku": "SKU-1056",
+      "name": "Stackable Aluminum Clip & Pin Holder",
+      "price": 1752.1,
+      "rating": 4,
+      "category": "Furniture",
+      "brand": "Quarry Lane",
+      "stock": 38
+    },
+    {
+      "sku": "SKU-1057",
+      "name": "Stackable Aluminum Pen & Pencil Tray",
+      "price": 51.47,
+      "rating": 3,
+      "category": "Furniture",
+      "brand": "Alder & Pine",
+      "stock": 624
+    },
+    {
+      "sku": "SKU-1058",
+      "name": "Stackable Canvas Letter Sorter",
+      "price": 678.97,
+      "rating": 3,
+      "category": "Storage",
+      "brand": "Bluewater",
+      "stock": 14
+    },
+    {
+      "sku": "SKU-1059",
+      "name": "Stackable Canvas Whiteboard",
+      "price": 1679.79,
+      "rating": 5,
+      "category": "Lighting",
+      "brand": "Tallgrass",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1060",
+      "name": "Stackable Glass Label Printer",
+      "price": 43.9,
+      "rating": 4,
+      "category": "Furniture",
+      "brand": "Bluewater",
+      "stock": 2
+    },
+    {
+      "sku": "SKU-1061",
+      "name": "Stackable Walnut Desk Lamp",
+      "price": 1332.89,
+      "rating": 5,
+      "category": "Desk Accessories",
+      "brand": "Bluewater",
+      "stock": 36
+    },
+    {
+      "sku": "SKU-1062",
+      "name": "Stackable Walnut File Box",
+      "price": 1432.52,
+      "rating": 3,
+      "category": "Furniture",
+      "brand": "Kestrel Works",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1063",
+      "name": "Weatherproof Aluminum Clip & Pin Holder",
+      "price": 9.44,
+      "rating": 5,
+      "category": "Storage",
+      "brand": "Alder & Pine",
+      "stock": 14
+    },
+    {
+      "sku": "SKU-1064",
+      "name": "Weatherproof Bamboo Drawer Unit",
+      "price": 1144.84,
+      "rating": 1,
+      "category": "Storage",
+      "brand": "Kestrel Works",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1065",
+      "name": "Weatherproof Bamboo Wall Shelf",
+      "price": 19.88,
+      "rating": 3,
+      "category": "Lighting",
+      "brand": "Northfield",
+      "stock": 340
+    },
+    {
+      "sku": "SKU-1066",
+      "name": "Weatherproof Canvas Pen & Pencil Tray",
+      "price": 1233.68,
+      "rating": 1,
+      "category": "Lighting",
+      "brand": "Tallgrass",
+      "stock": 19
+    },
+    {
+      "sku": "SKU-1067",
+      "name": "Weatherproof Steel Pen & Pencil Tray",
+      "price": 27.83,
+      "rating": 3,
+      "category": "Furniture",
+      "brand": "Northfield",
+      "stock": 5
+    },
+    {
+      "sku": "SKU-1068",
+      "name": "Weatherproof Walnut Drawer Unit",
+      "price": 6.76,
+      "rating": 2,
+      "category": "Storage",
+      "brand": "Tallgrass",
+      "stock": 0
+    },
+    {
+      "sku": "SKU-1069",
+      "name": "Weatherproof Walnut Letter Sorter",
+      "price": 9.31,
+      "rating": 5,
+      "category": "Furniture",
+      "brand": "Bluewater",
+      "stock": 345
+    }
+  ],
+  "broken": [
+    {
+      "sku": "SKU-1006",
+      "kind": "missing_price",
+      "reason_contains": "price: not found on the page"
+    },
+    {
+      "sku": "SKU-1043",
+      "kind": "price_not_a_number",
+      "reason_contains": "price: no number"
+    },
+    {
+      "sku": "SKU-1017",
+      "kind": "price_range",
+      "reason_contains": "price: more than one number"
+    },
+    {
+      "sku": "SKU-1028",
+      "kind": "price_zero",
+      "reason_contains": "price: 0 is below the minimum"
+    },
+    {
+      "sku": "SKU-1027",
+      "kind": "rating_out_of_range",
+      "reason_contains": "rating: 9 is above the maximum"
+    },
+    {
+      "sku": "SKU-1013",
+      "kind": "missing_rating",
+      "reason_contains": "rating: not found on the page"
+    },
+    {
+      "sku": "SKU-1008",
+      "kind": "empty_name",
+      "reason_contains": "name: empty"
+    },
+    {
+      "sku": "SKU-1040",
+      "kind": "detail_page_404",
+      "reason_contains": "detail page returned HTTP 404"
+    },
+    {
+      "sku": "SKU-1055",
+      "kind": "detail_page_disallowed",
+      "reason_contains": "detail page disallowed by robots.txt"
+    }
+  ],
+  "duplicate_listings": [
+    "SKU-1004",
+    "SKU-1015",
+    "SKU-1037"
+  ],
+  "disallowed_prefix": "/private/",
+  "never_extract": [
+    "SKU-9999"
+  ]
+}

@@ -1,0 +1,27 @@
+﻿metric,value
+job,quotes-toscrape
+started_utc,2026-11-21T05:01:23Z
+finished_utc,2026-11-21T05:01:23Z
+duration_seconds,0.3
+user_agent,web-data-extractor/0.1.0 (+https://github.com/chasebuilds/web-data-extractor)
+extractor_version,0.1.0
+config_sha256,3919a14b373d2ce270d4b12df8a6af17bb5d88f1bdacce9a7a55e2d4148fb816
+list_pages_read,2
+detail_pages_read,0
+network_requests,0
+cache_hits,3
+retries,0
+robots_refusals,0
+items_seen,20
+records,20
+records_with_warnings,0
+rejected,0
+rejected_as_duplicate,0
+delay_seconds[quotes.toscrape.com],1.0
+note,stopped at the max_pages cap (2); next was https://quotes.toscrape.com/page/3/
+terms_check,not recorded in the config (a person must read the site's terms first)
+fill_rate[quote],1.0
+fill_rate[tags],1.0
+rejected_share,0.0
+run_health,ok
+export_check,passed

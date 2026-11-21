@@ -1,0 +1,35 @@
+# quotes.toscrape.com is a sandbox built for scraping practice.
+# Two list pages, no detail pages. The author name on each quote is left out on
+# purpose: named individuals count as personal data and are not extracted.
+name: quotes-toscrape
+
+start_urls:
+  - https://quotes.toscrape.com/page/1/
+
+politeness:
+  min_delay_seconds: 1.0
+
+cache:
+  dir: .wde-cache
+  ttl_hours: 24
+
+limits:
+  max_pages: 2
+  max_requests: 10
+
+list:
+  item_selector: "div.quote"
+  fields:
+    quote:
+      selector: "span.text"
+      regex: '^[“"]?(.*?)[”"]?$'
+      required: true
+    tags:
+      selector: "a.tag"
+      multiple: true
+      join: ", "
+
+pagination:
+  next_selector: "li.next a"
+
+unique_by: [quote]
