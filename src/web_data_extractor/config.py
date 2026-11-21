@@ -242,6 +242,7 @@ def parse_config(data: Any, overrides: dict[str, str] | None = None) -> Config:
             "max_backoff_seconds",
             "max_retries",
             "timeout_seconds",
+            "max_concurrency_per_host",
         },
         "politeness",
     )

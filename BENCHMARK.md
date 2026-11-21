@@ -2,7 +2,7 @@
 
 Written by `benchmark/run_benchmark.py`. Do not edit by hand; rerun the script.
 
-- Run: 2026-11-21T05:11:04Z (UTC), web-data-extractor 0.1.0, Python 3.14.3, Windows
+- Run: 2026-11-21T16:00:53Z (UTC), web-data-extractor 0.1.0, Python 3.14.3, Windows
 - Input: the bundled fixture site, generated from seed 42 (72 listings on 6 catalog pages, one detail page per product)
 - Job: `configs/fixture.yaml`, served from 127.0.0.1, cache off, real delays
 
@@ -61,6 +61,18 @@ Each of these was written into the site on purpose. The reason is what the Rejec
 | Shortest gap between two requests, timed by the fixture server | 0.502 s |
 | Detail requests spent on duplicates or already-rejected rows | 0 |
 | Wall time | 37.1 s |
+
+## Async path
+
+The same job again with `max_concurrency_per_host: 2`, which switches the run to the async fetcher. Spacing is still enforced between the moments two requests to the host go out, so overlap only helps when a server takes longer to answer than the delay. The fixture server answers at once, so wall time here shows the delay still holds, not a speed-up.
+
+| Measure | Value |
+|---|---|
+| Same Records and Rejected as the sequential run | yes |
+| Records | 60 |
+| Requests to the disallowed `/private/` section | 0 |
+| Shortest gap between two requests, timed by the fixture server | 0.510 s |
+| Wall time | 34.7 s |
 
 ## Layout-change drill
 

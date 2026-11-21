@@ -9,6 +9,7 @@ from typing import Any
 from urllib.parse import urldefrag, urljoin
 
 from . import __version__
+from .afetch import AsyncPoliteFetcher
 from .config import Config, ConfigError
 from .extract import extract_fields, parse_html
 from .fetch import (
@@ -117,7 +118,11 @@ def run(config: Config, *, fetcher: PoliteFetcher | None = None) -> RunResult:
     started = utc_now()
     clock_start = time.monotonic()
     owns_fetcher = fetcher is None
-    fetcher = fetcher or PoliteFetcher(
+    # More than one request in flight per host needs the async path; one is plain sequential.
+    fetcher_class = (
+        AsyncPoliteFetcher if config.politeness.max_concurrency_per_host > 1 else PoliteFetcher
+    )
+    fetcher = fetcher or fetcher_class(
         config.politeness,
         cache_dir=config.cache_dir,
         cache_ttl_hours=config.cache_ttl_hours,
@@ -186,6 +191,7 @@ def run(config: Config, *, fetcher: PoliteFetcher | None = None) -> RunResult:
         ("network_requests", fetcher.network_requests),
         ("cache_hits", sum(1 for e in log if e.cache_hit)),
         ("retries", fetcher.retries),
+        ("max_concurrency_per_host", config.politeness.max_concurrency_per_host),
         ("robots_refusals", sum(1 for e in log if e.robots == "disallowed")),
         ("items_seen", len(rows)),
         ("records", len(records)),
@@ -288,7 +294,7 @@ def _crawl_lists(config: Config, fetcher: PoliteFetcher) -> tuple[list[_Row], in
 
 def _follow_details(config: Config, fetcher: PoliteFetcher, rows: list[_Row]) -> int:
     names = [f.name for f in config.detail_fields]
-    followed = read = 0
+    wanted: list[tuple[_Row, str]] = []
     for row in rows:
         if row.reasons:
             continue
@@ -296,24 +302,32 @@ def _follow_details(config: Config, fetcher: PoliteFetcher, rows: list[_Row]) ->
         problem = ""
         if not url:
             problem = "detail page link missing"
-        elif followed >= config.max_detail_pages:
+        elif len(wanted) >= config.max_detail_pages:
             problem = f"detail page not fetched (max_detail_pages cap of {config.max_detail_pages})"
         else:
-            followed += 1
-            result = fetcher.get(url)
-            if result.ok:
-                values, raws, problems = extract_fields(
-                    parse_html(result.text), config.detail_fields, result.final_url
-                )
-                row.values.update(values)
-                row.raws.update(raws)
-                row.problems.update(problems)
-                row.detail_page_url = result.final_url
-                row.detail_fetched_at = result.fetched_at
-                row.detail_sha256 = result.sha256
-                read += 1
-                continue
-            problem = f"detail page {_fetch_problem(result)}"
-        row.values.update(dict.fromkeys(names))
-        row.problems.update(dict.fromkeys(names, problem))
+            wanted.append((row, str(url)))
+            continue
+        _mark_detail_missing(row, names, problem)
+    # One batch, so the async fetcher can overlap requests within its per-host limit.
+    results = fetcher.get_many([url for _, url in wanted])
+    read = 0
+    for (row, _), result in zip(wanted, results, strict=True):
+        if not result.ok:
+            _mark_detail_missing(row, names, f"detail page {_fetch_problem(result)}")
+            continue
+        values, raws, problems = extract_fields(
+            parse_html(result.text), config.detail_fields, result.final_url
+        )
+        row.values.update(values)
+        row.raws.update(raws)
+        row.problems.update(problems)
+        row.detail_page_url = result.final_url
+        row.detail_fetched_at = result.fetched_at
+        row.detail_sha256 = result.sha256
+        read += 1
     return read
+
+
+def _mark_detail_missing(row: _Row, names: list[str], problem: str) -> None:
+    row.values.update(dict.fromkeys(names))
+    row.problems.update(dict.fromkeys(names, problem))

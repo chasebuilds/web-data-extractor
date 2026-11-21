@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from email.utils import parsedate_to_datetime
 from pathlib import Path
+from typing import Any
 from urllib.parse import urldefrag, urljoin, urlsplit
 
 import httpx
@@ -32,6 +33,8 @@ USER_AGENT = f"{TOOL_NAME}/{__version__} (+{REPO_URL})"
 MIN_DELAY_FLOOR = 0.5
 MIN_BACKOFF_FLOOR = 0.5
 MAX_RETRIES_CEILING = 6
+# Requests in flight to one host at once (async path). Spacing still applies to each start.
+MAX_CONCURRENCY_CEILING = 4
 # A host asking for more than this between requests is skipped, not ignored.
 MAX_HONORED_CRAWL_DELAY = 300.0
 
@@ -81,6 +84,7 @@ class Politeness:
     max_backoff_seconds: float = 60.0
     max_retries: int = 3
     timeout_seconds: float = 20.0
+    max_concurrency_per_host: int = 1
 
     def __post_init__(self) -> None:
         if not self.min_delay_seconds >= MIN_DELAY_FLOOR:
@@ -99,6 +103,10 @@ class Politeness:
             raise PolitenessError(f"max_retries must be between 0 and {MAX_RETRIES_CEILING}.")
         if not self.timeout_seconds > 0:
             raise PolitenessError("timeout_seconds must be above 0.")
+        if not 1 <= self.max_concurrency_per_host <= MAX_CONCURRENCY_CEILING:
+            raise PolitenessError(
+                f"max_concurrency_per_host must be between 1 and {MAX_CONCURRENCY_CEILING}."
+            )
 
 
 @dataclass
@@ -133,6 +141,12 @@ class FetchResult:
     @property
     def sha256(self) -> str:
         return hashlib.sha256(self.text.encode("utf-8")).hexdigest() if self.ok else ""
+
+
+@dataclass(frozen=True)
+class _Verdict:
+    stopped: str = ""  # non-empty: the job ended for this host
+    retry_gap: float | None = None  # set: try again after this many seconds
 
 
 def utc_now() -> datetime:
@@ -220,14 +234,24 @@ class PoliteFetcher:
         self._cache = _DiskCache(Path(cache_dir), cache_ttl_hours, now) if cache_dir else None
         self._last_request: dict[str, float] = {}
         self._robots: dict[str, tuple[RobotsPolicy, float]] = {}
-        self._client = httpx.Client(
-            headers={"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml"},
-            timeout=self.politeness.timeout_seconds,
-            follow_redirects=False,
-        )
+        self._sync_client: httpx.Client | None = None
+
+    def _client_options(self) -> dict[str, Any]:
+        return {
+            "headers": {"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml"},
+            "timeout": self.politeness.timeout_seconds,
+            "follow_redirects": False,
+        }
+
+    @property
+    def _client(self) -> httpx.Client:
+        if self._sync_client is None:
+            self._sync_client = httpx.Client(**self._client_options())
+        return self._sync_client
 
     def close(self) -> None:
-        self._client.close()
+        if self._sync_client is not None:
+            self._sync_client.close()
 
     def __enter__(self) -> PoliteFetcher:
         return self
@@ -238,58 +262,21 @@ class PoliteFetcher:
     # -- public ---------------------------------------------------------
 
     def get(self, url: str) -> FetchResult:
-        original = urldefrag(url).url
-        current = original
+        original = current = urldefrag(url).url
         for _ in range(MAX_REDIRECTS + 1):
-            refusal = self._refusal(current)
-            if refusal:
-                reason, robots_label, note = refusal
-                self._record(current, "page", None, False, robots_label, 0, 0.0, note)
-                return FetchResult(original, current, None, "", False, iso(self._now()), reason)
-
-            cached = self._cache.get(current) if self._cache else None
-            if cached:
-                self._record(current, "page", cached["status"], True, "allowed", 0, 0.0, "")
-                return FetchResult(
-                    original,
-                    cached["final_url"],
-                    cached["status"],
-                    cached["text"],
-                    True,
-                    cached["fetched_at"],
-                )
-
+            early = self._before_request(original, current)
+            if early:
+                return early
             response, error = self._request(current, "page", "allowed")
-            fetched_at = iso(self._now())
-            if response is None:
-                refused = ""
-                if error == "request cap reached":
-                    refused = "request-cap"
-                elif urlsplit(current).netloc in self.stopped_hosts:
-                    refused = "host-stopped"
-                return FetchResult(
-                    original,
-                    current,
-                    None,
-                    "",
-                    False,
-                    fetched_at,
-                    refused=refused,
-                    error="" if refused else error,
-                )
-            if response.status_code in REDIRECT_STATUSES and response.headers.get("location"):
-                # Each hop goes back through the scope and robots checks above.
-                current = urldefrag(urljoin(current, response.headers["location"])).url
-                continue
-            text = response.text
-            if response.status_code == 200 and self._cache:
-                self._cache.put(
-                    current, final_url=current, status=200, text=text, fetched_at=fetched_at
-                )
-            return FetchResult(original, current, response.status_code, text, False, fetched_at)
-        return FetchResult(
-            original, current, None, "", False, iso(self._now()), error="too many redirects"
-        )
+            outcome = self._after_response(original, current, response, error)
+            if isinstance(outcome, FetchResult):
+                return outcome
+            current = outcome
+        return self._too_many_redirects(original, current)
+
+    def get_many(self, urls: list[str]) -> list[FetchResult]:
+        """Fetch several URLs. This class goes one at a time; AsyncPoliteFetcher overlaps them."""
+        return [self.get(url) for url in urls]
 
     def stop_host(self, url: str, reason: str) -> None:
         """End the job for the host of `url`, and drop that page from the cache."""
@@ -300,14 +287,70 @@ class PoliteFetcher:
     def robots_for(self, url: str) -> RobotsPolicy:
         parts = urlsplit(url)
         origin = f"{parts.scheme}://{parts.netloc}"
-        known = self._robots.get(origin)
         # A long job re-reads robots.txt so a rule change is picked up within a day.
-        if known is None or self._clock() - known[1] > ROBOTS_MAX_AGE_HOURS * 3600:
-            known = (self._load_robots(origin), self._clock())
-            self._robots[origin] = known
-        return known[0]
+        if not self._robots_is_fresh(origin):
+            self._robots[origin] = (self._load_robots(origin), self._clock())
+        return self._robots[origin][0]
 
     # -- internals ------------------------------------------------------
+    # The decisions live in plain methods shared with AsyncPoliteFetcher, so both
+    # paths refuse, cache, retry and stop by exactly the same rules.
+
+    def _before_request(self, original: str, current: str) -> FetchResult | None:
+        """A refusal or a cache hit, or None when a request is needed."""
+        refusal = self._refusal(current)
+        if refusal:
+            reason, robots_label, note = refusal
+            self._record(current, "page", None, False, robots_label, 0, 0.0, note)
+            return FetchResult(original, current, None, "", False, iso(self._now()), reason)
+        cached = self._cache.get(current) if self._cache else None
+        if cached:
+            self._record(current, "page", cached["status"], True, "allowed", 0, 0.0, "")
+            return FetchResult(
+                original,
+                cached["final_url"],
+                cached["status"],
+                cached["text"],
+                True,
+                cached["fetched_at"],
+            )
+        return None
+
+    def _after_response(
+        self, original: str, current: str, response: httpx.Response | None, error: str
+    ) -> FetchResult | str:
+        """The result, or the next URL when the answer was a redirect."""
+        fetched_at = iso(self._now())
+        if response is None:
+            refused = ""
+            if error == "request cap reached":
+                refused = "request-cap"
+            elif urlsplit(current).netloc in self.stopped_hosts:
+                refused = "host-stopped"
+            return FetchResult(
+                original,
+                current,
+                None,
+                "",
+                False,
+                fetched_at,
+                refused=refused,
+                error="" if refused else error,
+            )
+        if response.status_code in REDIRECT_STATUSES and response.headers.get("location"):
+            # Each hop goes back through the scope and robots checks.
+            return urldefrag(urljoin(current, response.headers["location"])).url
+        text = response.text
+        if response.status_code == 200 and self._cache:
+            self._cache.put(
+                current, final_url=current, status=200, text=text, fetched_at=fetched_at
+            )
+        return FetchResult(original, current, response.status_code, text, False, fetched_at)
+
+    def _too_many_redirects(self, original: str, current: str) -> FetchResult:
+        return FetchResult(
+            original, current, None, "", False, iso(self._now()), error="too many redirects"
+        )
 
     def _refusal(self, url: str) -> tuple[str, str, str] | None:
         parts = urlsplit(url)
@@ -334,21 +377,37 @@ class PoliteFetcher:
         self.host_delays[host] = delay
         return delay
 
+    def _robots_is_fresh(self, origin: str) -> bool:
+        known = self._robots.get(origin)
+        return known is not None and self._clock() - known[1] <= ROBOTS_MAX_AGE_HOURS * 3600
+
     def _load_robots(self, origin: str) -> RobotsPolicy:
         url = f"{origin}/robots.txt"
+        cached = self._cached_robots(url)
+        if cached:
+            return self._robots_policy(url, *cached)
+        response, _ = self._request(url, "robots", "robots.txt")
+        return self._robots_policy(url, *self._store_robots(url, response))
+
+    def _cached_robots(self, url: str) -> tuple[int | None, str] | None:
         max_age = timedelta(hours=ROBOTS_MAX_AGE_HOURS)
         cached = self._cache.get(url, max_age) if self._cache else None
-        if cached:
-            status, text = cached["status"], cached["text"]
-            self._record(url, "robots", status, True, "robots.txt", 0, 0.0, "")
-        else:
-            response, _ = self._request(url, "robots", "robots.txt")
-            status = response.status_code if response is not None else None
-            text = response.text if response is not None and status == 200 else ""
-            if status is not None and status < 500 and self._cache:
-                self._cache.put(
-                    url, final_url=url, status=status, text=text, fetched_at=iso(self._now())
-                )
+        if not cached:
+            return None
+        self._record(url, "robots", cached["status"], True, "robots.txt", 0, 0.0, "")
+        return cached["status"], cached["text"]
+
+    def _store_robots(self, url: str, response: httpx.Response | None) -> tuple[int | None, str]:
+        status = response.status_code if response is not None else None
+        text = response.text if response is not None and status == 200 else ""
+        if status is not None and status < 500 and self._cache:
+            self._cache.put(
+                url, final_url=url, status=status, text=text, fetched_at=iso(self._now())
+            )
+        return status, text
+
+    @staticmethod
+    def _robots_policy(url: str, status: int | None, text: str) -> RobotsPolicy:
         if status == 200:
             return RobotsPolicy.parse(text, source=url)
         if status in (401, 403):
@@ -377,47 +436,70 @@ class PoliteFetcher:
         response: httpx.Response | None = None
         error = ""
         for attempt in range(1, self.politeness.max_retries + 2):
-            if self.network_requests >= self.max_requests:
-                self._record(
-                    url, kind, None, False, robots_label, attempt, 0.0, "refused: request cap"
-                )
+            if self._at_request_cap(url, kind, robots_label, attempt):
                 return None, "request cap reached"
             waited = self._wait(host, gap)
             self.network_requests += 1
             try:
                 response = self._client.get(url, follow_redirects=kind == "robots")
-                status, error = response.status_code, ""
+                error = ""
             except httpx.HTTPError as exc:
-                response, status, error = None, None, f"{type(exc).__name__}: {exc}"
+                response, error = None, f"{type(exc).__name__}: {exc}"
             self._last_request[host] = self._clock()
-
-            retryable = status is None or status in RETRY_STATUSES
-            last_attempt = attempt > self.politeness.max_retries
-            note = error
-            retry_after = self._retry_after_seconds(response) if retryable else None
-            stop = self._stop_reason(host, kind, status, response, retry_after)
-            if stop:
-                self.stopped_hosts[host] = stop
-                self._record(
-                    url, kind, status, False, robots_label, attempt, waited, f"stopped: {stop}"
-                )
-                return (response if kind == "robots" else None), f"job ended for this host ({stop})"
-            if retryable and not last_attempt:
-                backoff = min(
-                    self.politeness.max_backoff_seconds,
-                    self.politeness.backoff_base_seconds * 2 ** (attempt - 1),
-                ) * (1 + JITTER_FRACTION * self._jitter())
-                # Retry-After is honored in full. A value above the cap never gets
-                # here: _stop_reason has already ended the job for the host.
-                gap = max(delay, backoff, retry_after or 0.0)
-                note = (note + "; " if note else "") + f"retrying after {gap:g}s backoff"
-                self.retries += 1
-            elif retryable:
-                note = (note + "; " if note else "") + "gave up after retries"
-            self._record(url, kind, status, False, robots_label, attempt, waited, note)
-            if not retryable or last_attempt:
+            verdict = self._judge(url, kind, robots_label, attempt, waited, response, error, delay)
+            if verdict.stopped:
+                return (response if kind == "robots" else None), verdict.stopped
+            if verdict.retry_gap is None:
                 break
+            gap = verdict.retry_gap
         return response, error
+
+    def _at_request_cap(self, url: str, kind: str, robots_label: str, attempt: int) -> bool:
+        if self.network_requests < self.max_requests:
+            return False
+        self._record(url, kind, None, False, robots_label, attempt, 0.0, "refused: request cap")
+        return True
+
+    def _judge(
+        self,
+        url: str,
+        kind: str,
+        robots_label: str,
+        attempt: int,
+        waited: float,
+        response: httpx.Response | None,
+        error: str,
+        delay: float,
+    ) -> _Verdict:
+        """Log one attempt and decide: stop the host, retry after a gap, or finish."""
+        host = urlsplit(url).netloc
+        status = response.status_code if response is not None else None
+        retryable = status is None or status in RETRY_STATUSES
+        last_attempt = attempt > self.politeness.max_retries
+        note = error
+        retry_after = self._retry_after_seconds(response) if retryable else None
+        stop = self._stop_reason(host, kind, status, response, retry_after)
+        if stop:
+            self.stopped_hosts[host] = stop
+            self._record(
+                url, kind, status, False, robots_label, attempt, waited, f"stopped: {stop}"
+            )
+            return _Verdict(stopped=f"job ended for this host ({stop})")
+        gap = None
+        if retryable and not last_attempt:
+            backoff = min(
+                self.politeness.max_backoff_seconds,
+                self.politeness.backoff_base_seconds * 2 ** (attempt - 1),
+            ) * (1 + JITTER_FRACTION * self._jitter())
+            # Retry-After is honored in full. A value above the cap never gets
+            # here: _stop_reason has already ended the job for the host.
+            gap = max(delay, backoff, retry_after or 0.0)
+            note = (note + "; " if note else "") + f"retrying after {gap:g}s backoff"
+            self.retries += 1
+        elif retryable:
+            note = (note + "; " if note else "") + "gave up after retries"
+        self._record(url, kind, status, False, robots_label, attempt, waited, note)
+        return _Verdict(retry_gap=gap)
 
     def _stop_reason(
         self,

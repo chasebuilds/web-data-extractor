@@ -59,7 +59,16 @@ def main() -> int:
         ]
         drill = run(replace(config, list_fields=moved))
         drill_requests = len(site.paths) - len(served)
-    elapsed = time.monotonic() - started
+        elapsed = time.monotonic() - started
+        # The same job on the async path, two requests per host allowed in flight.
+        marker = len(site.arrivals)
+        async_started = time.monotonic()
+        overlapped = run(
+            replace(config, politeness=replace(config.politeness, max_concurrency_per_host=2))
+        )
+        async_elapsed = time.monotonic() - async_started
+        async_arrivals = list(site.arrivals[marker:])
+        async_private = [p for p in site.paths[marker:] if p.startswith("/private/")]
     write_outputs(result, ROOT / "out" / "benchmark")
 
     got = {r["sku"]: r for r in result.records}
@@ -95,6 +104,14 @@ def main() -> int:
     network = [e for e in result.log if e.status is not None and not e.cache_hit]
     shortest_gap = min(b - a for a, b in zip(arrivals, arrivals[1:], strict=False))
     accounted = len(result.records) + len(result.rejected)
+
+    def _comparable(rows: list[dict]) -> list[dict]:
+        return [{k: v for k, v in r.items() if "fetched_at" not in k} for r in rows]
+
+    same_output = _comparable(overlapped.records) == _comparable(result.records) and _comparable(
+        overlapped.rejected
+    ) == _comparable(result.rejected)
+    async_gap = min(b - a for a, b in zip(async_arrivals, async_arrivals[1:], strict=False))
 
     lines = [
         "# Benchmark",
@@ -165,6 +182,22 @@ def main() -> int:
         f"| Detail requests spent on duplicates or already-rejected rows | "
         f"{len([p for p in served if p.startswith('/item/')]) - len(expected) - 1} |",
         f"| Wall time | {elapsed:.1f} s |",
+        "",
+        "## Async path",
+        "",
+        "The same job again with `max_concurrency_per_host: 2`, which switches the run to "
+        "the async fetcher. Spacing is still enforced between the moments two requests to "
+        "the host go out, so overlap only helps when a server takes longer to answer than "
+        "the delay. The fixture server answers at once, so wall time here shows the delay "
+        "still holds, not a speed-up.",
+        "",
+        "| Measure | Value |",
+        "|---|---|",
+        f"| Same Records and Rejected as the sequential run | {'yes' if same_output else 'NO'} |",
+        f"| Records | {len(overlapped.records)} |",
+        f"| Requests to the disallowed `/private/` section | {len(async_private)} |",
+        f"| Shortest gap between two requests, timed by the fixture server | {async_gap:.3f} s |",
+        f"| Wall time | {async_elapsed:.1f} s |",
         "",
         "## Layout-change drill",
         "",

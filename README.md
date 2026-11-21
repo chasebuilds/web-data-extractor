@@ -20,6 +20,7 @@ From [BENCHMARK.md](BENCHMARK.md), written by `benchmark/run_benchmark.py` from 
 | Listings accounted for (Records + Rejected) | 72 of 72 |
 | Requests made to the section robots.txt disallows | 0 |
 | Shortest gap between two requests, timed by the test server | 0.502 s (limit 0.5 s) |
+| Same job on the async path, 2 requests per host in flight: same output, shortest gap | yes, 0.510 s |
 
 The benchmark also runs a layout-change drill: the same job with the price selector pointed at an element that is not there. Result: 0 records written, 72 of 72 listings in Rejected with a reason, run health "attention", exit code 1, and only 7 requests made.
 
@@ -78,20 +79,22 @@ Other commands:
 wde validate configs/books_toscrape.yaml     # check a config, no network use
 wde run configs/books_toscrape.yaml --out out/books
 python benchmark/run_benchmark.py            # rebuild the test site, score it, rewrite BENCHMARK.md
-pytest                                       # 173 tests, all offline
+pytest                                       # 185 tests, all offline
 ```
 
 ## How it works
 
 1. **Config.** A YAML file names the start URLs, a CSS selector for one item, and a selector per field. A field can read text or an attribute, pull part of it out with a regex, map words to values, and be cast to a number, integer or absolute URL. See [configs/fixture.yaml](configs/fixture.yaml) for a full example.
 2. **Fetch.** Every request goes through one function. Before each one it checks the host's robots.txt and refuses a disallowed path without contacting the server. It waits at least the configured delay between requests to one host (never under 0.5 s), uses the site's `Crawl-delay` when that is longer, retries 429 and 5xx answers with growing backoff, and keeps a disk cache so a rerun does not hit the site again. robots.txt is read again at least every 24 hours.
+
+   Set `politeness.max_concurrency_per_host` (1 to 4, default 1) above 1 and the run switches to the async fetcher (`AsyncPoliteFetcher`, on `httpx.AsyncClient`). It keeps every rule above and adds: up to that many requests to one host in flight at once, the delay measured between the moments two requests actually go out (after the connection is open, so a slow connect cannot squeeze the next gap), a 429 or 5xx on one request holding back every request to that host, and one robots.txt read per host however many tasks ask at once. Detail pages are fetched as one batch so they can overlap. Overlap only pays off when a server is slower to answer than the delay.
 3. **Stop when the site says no.** `Retry-After` is honored in full, as seconds or as a date. If the site asks for a longer wait than the backoff cap (60 s by default), the job ends for that host and does not come back early. Three answers of 403 or 429 in a row, or a page whose title reads like a block, CAPTCHA or consent wall, also end the job for that host. The run then exits with a non-zero code and the Summary sheet says why. There is no retry around a block.
 4. **Paginate.** Follow a "next" link, or walk a numbered page pattern, up to a page cap.
 5. **Detail pages.** Optionally follow each item's link for more fields. Duplicates and rows that already failed are skipped first, so they cost the site nothing.
 6. **Validate.** Required fields, types, min and max. A value that cannot be read rejects the row if the field is required, and becomes a note in the `warnings` column if it is optional. Nothing is guessed: a price range is rejected, not cut to its first number.
 7. **Export and check.** Write the workbook, open it again, and compare row counts and headers with what was meant to be written. The result of that check is on the Summary sheet.
 
-The compliance rules are covered by tests in [tests/test_compliance.py](tests/test_compliance.py) and [tests/test_stop_rules.py](tests/test_stop_rules.py): a disallowed path is refused and the server never sees it, the delay is enforced, a zero delay in a config is rejected, a 429 triggers backoff, an over-long `Retry-After` or a block page ends the job for that host.
+The compliance rules are covered by tests in [tests/test_compliance.py](tests/test_compliance.py) and [tests/test_stop_rules.py](tests/test_stop_rules.py): a disallowed path is refused and the server never sees it, the delay is enforced, a zero delay in a config is rejected, a 429 triggers backoff, an over-long `Retry-After` or a block page ends the job for that host. The async path has its own tests in [tests/test_async_fetch.py](tests/test_async_fetch.py), including a slow local server that counts overlapping requests and a fake server that answers 429 then 200.
 
 Before a job runs against a new site, a person reads that site's terms of use and records it in the config's `terms_check` block (URL, date read, the clause on automated access). The tool refuses to run against any host other than this machine and the two sandbox sites without that record, and copies it into the Summary sheet.
 

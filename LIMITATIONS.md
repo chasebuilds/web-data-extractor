@@ -22,7 +22,7 @@ What this tool does not do, on purpose or not yet.
 - **One level of detail pages.** A list page can link to a detail page. A detail page cannot link on to a third level.
 - **CSS selectors only.** No XPath.
 - **Field types** are text, number, integer and url. No dates, no currencies as a separate column, no unit conversion.
-- **Sequential only.** One request at a time. Large crawls are slow by design.
+- **Little parallelism, on purpose.** By default one request at a time. `max_concurrency_per_host` allows up to 4 in flight per host, but the delay between request starts still applies, so a large crawl stays slow by design. List pages are read one after another either way, since each one names the next.
 - **Next-link or numbered pagination only.** No infinite scroll, no "load more" buttons, no form posts.
 
 ## Known rough edges
