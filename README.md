@@ -79,7 +79,9 @@ Other commands:
 wde validate configs/books_toscrape.yaml     # check a config, no network use
 wde run configs/books_toscrape.yaml --out out/books
 python benchmark/run_benchmark.py            # rebuild the test site, score it, rewrite BENCHMARK.md
-pytest                                       # 185 tests, all offline
+wde demo --out out/fixture/data.jsonl        # also write Records as JSON Lines
+wde demo --out out/fixture/data.parquet      # or as Parquet (pip install -e ".[parquet]")
+pytest                                       # 191 tests, all offline
 ```
 
 ## How it works
@@ -129,6 +131,8 @@ One XLSX workbook and the same four tables as CSV files:
 | `Rejected` | Every row that was left out, with the reason and the text that was on the page. |
 | `RunLog` | Every URL the tool tried, in order: HTTP status, cache hit or not, the robots.txt decision, the attempt number, and the wait before it. |
 | `Summary` | Counts, fill rate per field, the delay used per host, refusals, caps that were hit, the tool version, a hash of the config, the terms record, run health, and the export check. |
+
+`--out` can also name a file. `--out data.jsonl` writes the Records table as JSON Lines (one object per row, same columns and order as the sheet) and `--out data.parquet` writes it as Parquet with typed columns. The workbook and CSV files are still written, in the same folder as that file. Parquet needs the optional `pyarrow` extra; without it the run stops before any request is made. Each data file is read back after writing and its row count checked.
 
 Text that starts with `=`, `+`, `-` or `@` is stored as plain text, so a scraped value cannot run as a spreadsheet formula.
 

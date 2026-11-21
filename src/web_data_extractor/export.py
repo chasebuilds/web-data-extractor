@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import json
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -26,6 +27,23 @@ RUNLOG_COLUMNS = [
     "note",
 ]
 _FORMULA_STARTS = ("=", "+", "-", "@")
+# `--out` ending in one of these writes Records in that format, next to the usual files.
+DATA_FORMATS = (".jsonl", ".parquet")
+
+
+class ExportError(RuntimeError):
+    """Raised when an output format cannot be written, for example a missing extra."""
+
+
+def require_format(out: str | Path) -> None:
+    """Fail before any crawl when the chosen output format cannot be written."""
+    if Path(out).suffix.lower() == ".parquet":
+        try:
+            import pyarrow  # noqa: F401
+        except ImportError as exc:
+            raise ExportError(
+                "Parquet output needs pyarrow: pip install 'web-data-extractor[parquet]'"
+            ) from exc
 
 
 def _csv_safe(value: Any) -> Any:
@@ -97,8 +115,49 @@ def _verify(path: Path, tables: dict[str, tuple[list[str], list[list[Any]]]]) ->
     return problems
 
 
-def write_outputs(result: RunResult, out_dir: str | Path) -> dict[str, Path]:
-    out = Path(out_dir)
+def _records(result: RunResult) -> list[dict[str, Any]]:
+    columns = result.record_columns
+    return [{c: r.get(c) for c in columns} for r in result.records]
+
+
+def write_jsonl(result: RunResult, path: Path) -> None:
+    """One JSON object per record, columns in the same order as the Records sheet."""
+    with path.open("w", encoding="utf-8", newline="\n") as handle:
+        for record in _records(result):
+            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+    with path.open(encoding="utf-8") as handle:
+        written = sum(1 for _ in handle)
+    if written != len(result.records):
+        raise RuntimeError(f"{path}: {written} lines on disk, expected {len(result.records)}")
+
+
+def write_parquet(result: RunResult, path: Path) -> None:
+    require_format(path)
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    columns = result.record_columns
+    if result.records:
+        table = pa.Table.from_pylist(_records(result)).select(columns)
+    else:
+        table = pa.table({c: pa.array([], type=pa.string()) for c in columns})
+    pq.write_table(table, path)
+    on_disk = pq.read_table(path)
+    if on_disk.num_rows != len(result.records) or on_disk.column_names != columns:
+        raise RuntimeError(f"{path}: rows or columns on disk differ from the Records sheet")
+
+
+def write_outputs(result: RunResult, out: str | Path) -> dict[str, Path]:
+    """Write the workbook and CSVs into a folder.
+
+    When `out` names a .jsonl or .parquet file, Records are also written there in
+    that format, and the workbook and CSVs go in the same folder as that file.
+    """
+    target = Path(out)
+    data_format = target.suffix.lower() if target.suffix.lower() in DATA_FORMATS else ""
+    if data_format:
+        require_format(target)
+    out = target.parent if data_format else target
     out.mkdir(parents=True, exist_ok=True)
     tables = _tables(result)
     xlsx_path = out / f"{result.config.name}.xlsx"
@@ -118,6 +177,12 @@ def write_outputs(result: RunResult, out_dir: str | Path) -> dict[str, Path]:
     ):
         paths[title] = out / filename
         _write_csv(paths[title], *tables[title])
+    if data_format == ".jsonl":
+        write_jsonl(result, target)
+        paths["jsonl"] = target
+    elif data_format == ".parquet":
+        write_parquet(result, target)
+        paths["parquet"] = target
     if problems:
         raise RuntimeError("export check failed: " + "; ".join(problems))
     return paths

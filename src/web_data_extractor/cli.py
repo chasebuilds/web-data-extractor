@@ -6,10 +6,9 @@ import argparse
 import sys
 import time
 from dataclasses import replace
-from pathlib import Path
 
 from .config import Config, ConfigError, load_config
-from .export import write_outputs
+from .export import DATA_FORMATS, ExportError, require_format, write_outputs
 from .fetch import MIN_DELAY_FLOOR, USER_AGENT
 from .fixture_server import serve
 from .runner import run
@@ -36,16 +35,20 @@ def _load(args: argparse.Namespace, extra: dict[str, str] | None = None) -> Conf
     return config
 
 
-def _run_and_report(config: Config, out_dir: str) -> int:
+def _run_and_report(config: Config, out: str) -> int:
+    require_format(out)  # a missing extra should fail before the site is contacted
     print(
         f"Job {config.name}: {len(config.start_urls)} start URL(s), up to {config.max_pages} "
         f"list page(s), at least {config.politeness.min_delay_seconds:g}s between requests."
     )
     result = run(config)
-    paths = write_outputs(result, out_dir)
+    paths = write_outputs(result, out)
     for key, value in result.summary:
         print(f"  {key}: {value}")
-    print(f"Wrote {paths['xlsx']} and 4 CSV files in {Path(out_dir)}")
+    print(f"Wrote {paths['xlsx']} and 4 CSV files in {paths['xlsx'].parent}")
+    for key in ("jsonl", "parquet"):
+        if key in paths:
+            print(f"Wrote {len(result.records)} records to {paths[key]}")
     # A run that was blocked or came back empty must not look like a success to a scheduler.
     return 0 if dict(result.summary)["run_health"] == "ok" else 1
 
@@ -107,7 +110,12 @@ def build_parser() -> argparse.ArgumentParser:
         )
 
     def run_options(p: argparse.ArgumentParser, out: str) -> None:
-        p.add_argument("--out", default=out, help=f"output folder (default {out})")
+        p.add_argument(
+            "--out",
+            default=out,
+            help=f"output folder (default {out}), or a file ending in "
+            f"{' or '.join(DATA_FORMATS)} to also write Records in that format",
+        )
         p.add_argument("--max-pages", type=int, help="override limits.max_pages")
         p.add_argument("--no-cache", action="store_true", help="do not read or write the cache")
 
@@ -138,7 +146,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (ConfigError, FileNotFoundError, OSError) as exc:
+    except (ConfigError, ExportError, FileNotFoundError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
