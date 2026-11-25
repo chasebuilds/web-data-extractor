@@ -1,0 +1,45 @@
+> python -m venv .venv
+[exit 0, 5.2 s]
+
+> .venv\Scripts\python -m pip install -q .
+[exit 0, 9.0 s]
+
+> .venv\Scripts\wde demo --port 8741
+Serving the bundled fixture site from fixture_site at http://127.0.0.1:8741
+Job fixture-catalog: 1 start URL(s), up to 10 list page(s), at least 0.5s between requests.
+  job: fixture-catalog
+  started_utc: 2026-11-25T11:05:16Z
+  finished_utc: 2026-11-25T11:05:50Z
+  duration_seconds: 34.2
+  user_agent: web-data-extractor/0.1.0 (+https://github.com/chasebuilds/web-data-extractor)
+  extractor_version: 0.1.0
+  config_sha256: 5870e1b5af39c82ed6f3e38c9b23a9cefd12ad8d4ea9211695759de527d749dd
+  list_pages_read: 6
+  detail_pages_read: 60
+  network_requests: 68
+  cache_hits: 0
+  retries: 0
+  max_concurrency_per_host: 1
+  robots_refusals: 1
+  items_seen: 72
+  records: 60
+  records_with_warnings: 0
+  rejected: 12
+  rejected_as_duplicate: 3
+  delay_seconds[127.0.0.1:8741]: 0.5
+  refusal: refused: disallowed by robots.txt (http://127.0.0.1:8741/robots.txt): 1
+  terms_check: not recorded in the config (a person must read the site's terms first)
+  fill_rate[sku]: 1.0
+  fill_rate[name]: 0.986
+  fill_rate[category]: 1.0
+  fill_rate[price]: 0.942
+  fill_rate[rating]: 0.971
+  fill_rate[link]: 1.0
+  fill_rate[brand]: 0.87
+  fill_rate[stock]: 0.87
+  rejected_share: 0.167
+  run_health: ok
+  export_check: passed
+Wrote out\fixture\fixture-catalog.xlsx and 4 CSV files in out\fixture
+Requests the fixture server saw under /private/ (disallowed): 0
+[exit 0, 35.1 s]

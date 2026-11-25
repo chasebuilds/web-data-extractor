@@ -4,7 +4,34 @@
 
 Turns a public catalog-style website into a checked spreadsheet, driven by one small config file, and only when the site's robots.txt allows it. Every row carries the page it came from and when it was fetched.
 
-![Raw catalog HTML on the left, the cleaned product rows and the rejected rows with reasons on the right](docs/preview.png)
+## See it run
+
+Scraping real sites from a browser page is neither possible nor polite, so there is no browser demo. This is a real run of `wde demo`: it serves the bundled test site on 127.0.0.1, extracts it with every robots.txt and delay rule on, and writes the outputs. Nothing leaves your machine. Captured from the terminal unedited ([full transcript](docs/run.txt)).
+
+![Terminal: venv, install, then wde demo extracting the local test site: 60 records, 12 rejected, run_health ok, 0 requests to the disallowed path](docs/run.png)
+
+A few rows of `out/fixture/records.csv` and `out/fixture/rejected.csv` from that run:
+
+| sku | name | category | brand | stock |
+|---|---|---|---|---|
+| SKU-1060 | Stackable Glass Label Printer | Furniture | Bluewater | 2 |
+| SKU-1004 | Adjustable Walnut Laptop Riser | Print & Label | Northfield | 0 |
+| SKU-1032 | Magnetic Aluminum Desk Lamp | Desk Accessories | Tallgrass | 0 |
+
+| reason | sku | name |
+|---|---|---|
+| name: empty | SKU-1008 | |
+| price: 0 is below the minimum 0.01 | SKU-1028 | Low-Profile Cork Storage Bin |
+
+### Run it yourself in 3 commands
+
+After `git clone https://github.com/chasebuilds/web-data-extractor` and `cd web-data-extractor` (Windows shown; on macOS or Linux use `python3` and `.venv/bin/`). It takes about 35 seconds because it waits half a second between requests even locally. Leave off `--port` to use the default 8731.
+
+```
+python -m venv .venv
+.venv\Scripts\python -m pip install -q .
+.venv\Scripts\wde demo --port 8741
+```
 
 ## Measured result
 
@@ -25,6 +52,8 @@ From [BENCHMARK.md](BENCHMARK.md), written by `benchmark/run_benchmark.py` from 
 The benchmark also runs a layout-change drill: the same job with the price selector pointed at an element that is not there. Result: 0 records written, 72 of 72 listings in Rejected with a reason, run health "attention", exit code 1, and only 7 requests made.
 
 The test site and its config were written together, so this shows the engine and its checks work. It is not a promise about a site the tool has never seen. Each new site gets its own config and its own spot check.
+
+![Raw catalog HTML on the left, the cleaned product rows and the rejected rows with reasons on the right](docs/preview.png)
 
 ## Before and after
 
