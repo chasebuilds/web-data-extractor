@@ -177,3 +177,11 @@ No logins, no CAPTCHA handling, no proxy rotation or browser disguise, no person
 ## License
 
 MIT, see [LICENSE](LICENSE). Copyright Chase Builds.
+
+## More from Chase Builds
+
+- **[webgpu-agent-kit](https://github.com/chasebuilds/webgpu-agent-kit)**: Helps AI coding agents write GPU code that actually runs. 10 of 10 examples render clean. ([live demo](https://chasebuilds.github.io/webgpu-agent-kit/))
+- **[sheets-automations](https://github.com/chasebuilds/sheets-automations)**: Google Sheets that send summaries, invoices, overdue reminders and low-stock alerts on their own. ([live demo](https://chasebuilds.github.io/sheets-automations/))
+- **[pdf-qa-local](https://github.com/chasebuilds/pdf-qa-local)**: Ask questions about your PDFs with AI that runs on your own computer, so documents never leave the office.
+
+[All projects, sorted by industry](https://github.com/chasebuilds) · [chasebuilds.github.io](https://chasebuilds.github.io)
